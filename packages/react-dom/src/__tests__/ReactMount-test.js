@@ -29,7 +29,7 @@ describe('ReactMount', () => {
   describe('unmountComponentAtNode', () => {
     it('throws when given a non-node', () => {
       const nodeArray = document.getElementsByTagName('div');
-      expect(function() {
+      expect(() => {
         ReactDOM.unmountComponentAtNode(nodeArray);
       }).toThrowError(
         'unmountComponentAtNode(...): Target container is not a DOM element.',
@@ -53,22 +53,18 @@ describe('ReactMount', () => {
   });
 
   it('warns when given a factory', () => {
-    spyOnDev(console, 'error');
     class Component extends React.Component {
       render() {
         return <div />;
       }
     }
 
-    ReactTestUtils.renderIntoDocument(Component);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Functions are not valid as a React child. ' +
-          'This may happen if you return a Component instead of <Component /> from render. ' +
-          'Or maybe you meant to call this function rather than return it.',
-      );
-    }
+    expect(() => ReactTestUtils.renderIntoDocument(Component)).toWarnDev(
+      'Functions are not valid as a React child. ' +
+        'This may happen if you return a Component instead of <Component /> from render. ' +
+        'Or maybe you meant to call this function rather than return it.',
+      {withoutStack: true},
+    );
   });
 
   it('should render different components in same root', () => {
@@ -96,25 +92,25 @@ describe('ReactMount', () => {
       }
     }
 
-    expect(mockMount.mock.calls.length).toBe(0);
-    expect(mockUnmount.mock.calls.length).toBe(0);
+    expect(mockMount).toHaveBeenCalledTimes(0);
+    expect(mockUnmount).toHaveBeenCalledTimes(0);
 
     ReactDOM.render(<Component text="orange" key="A" />, container);
     expect(container.firstChild.innerHTML).toBe('orange');
-    expect(mockMount.mock.calls.length).toBe(1);
-    expect(mockUnmount.mock.calls.length).toBe(0);
+    expect(mockMount).toHaveBeenCalledTimes(1);
+    expect(mockUnmount).toHaveBeenCalledTimes(0);
 
     // If we change the key, the component is unmounted and remounted
     ReactDOM.render(<Component text="green" key="B" />, container);
     expect(container.firstChild.innerHTML).toBe('green');
-    expect(mockMount.mock.calls.length).toBe(2);
-    expect(mockUnmount.mock.calls.length).toBe(1);
+    expect(mockMount).toHaveBeenCalledTimes(2);
+    expect(mockUnmount).toHaveBeenCalledTimes(1);
 
     // But if we don't change the key, the component instance is reused
     ReactDOM.render(<Component text="blue" key="B" />, container);
     expect(container.firstChild.innerHTML).toBe('blue');
-    expect(mockMount.mock.calls.length).toBe(2);
-    expect(mockUnmount.mock.calls.length).toBe(1);
+    expect(mockMount).toHaveBeenCalledTimes(2);
+    expect(mockUnmount).toHaveBeenCalledTimes(1);
   });
 
   it('should reuse markup if rendering to the same target twice', () => {
@@ -129,54 +125,39 @@ describe('ReactMount', () => {
     const container = document.createElement('container');
     container.innerHTML = ReactDOMServer.renderToString(<div />) + ' ';
 
-    spyOnDev(console, 'error');
-    ReactDOM.hydrate(<div />, container);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Did not expect server HTML to contain the text node " " in <container>.',
-      );
-    }
+    expect(() => ReactDOM.hydrate(<div />, container)).toWarnDev(
+      'Did not expect server HTML to contain the text node " " in <container>.',
+      {withoutStack: true},
+    );
   });
 
   it('should warn if mounting into right padded rendered markup', () => {
     const container = document.createElement('container');
     container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
 
-    spyOnDev(console, 'error');
-    ReactDOM.hydrate(<div />, container);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Did not expect server HTML to contain the text node " " in <container>.',
-      );
-    }
+    expect(() => ReactDOM.hydrate(<div />, container)).toWarnDev(
+      'Did not expect server HTML to contain the text node " " in <container>.',
+      {withoutStack: true},
+    );
   });
 
   it('should not warn if mounting into non-empty node', () => {
     const container = document.createElement('container');
     container.innerHTML = '<div></div>';
 
-    spyOnDev(console, 'error');
     ReactDOM.render(<div />, container);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(0);
-    }
   });
 
   it('should warn when mounting into document.body', () => {
     const iFrame = document.createElement('iframe');
     document.body.appendChild(iFrame);
-    spyOnDev(console, 'error');
 
-    ReactDOM.render(<div />, iFrame.contentDocument.body);
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Rendering components directly into document.body is discouraged',
-      );
-    }
+    expect(() =>
+      ReactDOM.render(<div />, iFrame.contentDocument.body),
+    ).toWarnDev(
+      'Rendering components directly into document.body is discouraged',
+      {withoutStack: true},
+    );
   });
 
   it('should account for escaping on a checksum mismatch', () => {
@@ -186,18 +167,16 @@ describe('ReactMount', () => {
     );
     div.innerHTML = markup;
 
-    spyOnDev(console, 'error');
-    ReactDOM.hydrate(
-      <div>This markup contains an nbsp entity: &nbsp; client text</div>,
-      div,
+    expect(() =>
+      ReactDOM.hydrate(
+        <div>This markup contains an nbsp entity: &nbsp; client text</div>,
+        div,
+      ),
+    ).toWarnDev(
+      'Server: "This markup contains an nbsp entity:   server text" ' +
+        'Client: "This markup contains an nbsp entity:   client text"',
+      {withoutStack: true},
     );
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Server: "This markup contains an nbsp entity:   server text" ' +
-          'Client: "This markup contains an nbsp entity:   client text"',
-      );
-    }
   });
 
   it('should warn if render removes React-rendered children', () => {
@@ -216,18 +195,15 @@ describe('ReactMount', () => {
     ReactDOM.render(<Component />, container);
 
     // Test that blasting away children throws a warning
-    spyOnDev(console, 'error');
     const rootNode = container.firstChild;
-    ReactDOM.render(<span />, rootNode);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: render(...): Replacing React-rendered children with a new ' +
-          'root component. If you intended to update the children of this node, ' +
-          'you should instead have the existing children update their state and ' +
-          'render the new components instead of calling ReactDOM.render.',
-      );
-    }
+
+    expect(() => ReactDOM.render(<span />, rootNode)).toWarnDev(
+      'Warning: render(...): Replacing React-rendered children with a new ' +
+        'root component. If you intended to update the children of this node, ' +
+        'you should instead have the existing children update their state and ' +
+        'render the new components instead of calling ReactDOM.render.',
+      {withoutStack: true},
+    );
   });
 
   it('should warn if the unmounted node was rendered by another copy of React', () => {
@@ -249,21 +225,14 @@ describe('ReactMount', () => {
     // Make sure ReactDOM and ReactDOMOther are different copies
     expect(ReactDOM).not.toEqual(ReactDOMOther);
 
-    spyOnDev(console, 'error');
-    ReactDOMOther.unmountComponentAtNode(container);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        "Warning: unmountComponentAtNode(): The node you're attempting to unmount " +
-          'was rendered by another copy of React.',
-      );
-    }
+    expect(() => ReactDOMOther.unmountComponentAtNode(container)).toWarnDev(
+      "Warning: unmountComponentAtNode(): The node you're attempting to unmount " +
+        'was rendered by another copy of React.',
+      {withoutStack: true},
+    );
 
     // Don't throw a warning if the correct React copy unmounts the node
     ReactDOM.unmountComponentAtNode(container);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
   });
 
   it('passes the correct callback context', () => {

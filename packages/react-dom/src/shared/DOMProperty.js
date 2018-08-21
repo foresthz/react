@@ -7,7 +7,7 @@
  * @flow
  */
 
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -66,14 +66,15 @@ export const VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
   '^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$',
 );
 
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 const illegalAttributeNameCache = {};
 const validatedAttributeNameCache = {};
 
 export function isAttributeNameSafe(attributeName: string): boolean {
-  if (validatedAttributeNameCache.hasOwnProperty(attributeName)) {
+  if (hasOwnProperty.call(validatedAttributeNameCache, attributeName)) {
     return true;
   }
-  if (illegalAttributeNameCache.hasOwnProperty(attributeName)) {
+  if (hasOwnProperty.call(illegalAttributeNameCache, attributeName)) {
     return false;
   }
   if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
@@ -157,6 +158,9 @@ export function shouldRemoveAttribute(
   ) {
     return true;
   }
+  if (isCustomComponentTag) {
+    return false;
+  }
   if (propertyInfo !== null) {
     switch (propertyInfo.type) {
       case BOOLEAN:
@@ -224,12 +228,12 @@ const properties = {};
 
 // A few React string attributes have a different name.
 // This is a mapping from React prop names to the attribute names.
-new Map([
+[
   ['acceptCharset', 'accept-charset'],
   ['className', 'class'],
   ['htmlFor', 'for'],
   ['httpEquiv', 'http-equiv'],
-]).forEach((attributeName, name) => {
+].forEach(([name, attributeName]) => {
   properties[name] = new PropertyInfoRecord(
     name,
     STRING,
@@ -256,7 +260,12 @@ new Map([
 // In React, we let users pass `true` and `false` even though technically
 // these aren't boolean attributes (they are coerced to strings).
 // Since these are SVG attributes, their attribute names are case-sensitive.
-['autoReverse', 'externalResourcesRequired', 'preserveAlpha'].forEach(name => {
+[
+  'autoReverse',
+  'externalResourcesRequired',
+  'focusable',
+  'preserveAlpha',
+].forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
     BOOLEANISH_STRING,
@@ -281,6 +290,7 @@ new Map([
   'formNoValidate',
   'hidden',
   'loop',
+  'noModule',
   'noValidate',
   'open',
   'playsInline',
@@ -310,35 +320,55 @@ new Map([
   'multiple',
   'muted',
   'selected',
+
+  // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
 ].forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
     BOOLEAN,
     true, // mustUseProperty
-    name.toLowerCase(), // attributeName
+    name, // attributeName
     null, // attributeNamespace
   );
 });
 
 // These are HTML attributes that are "overloaded booleans": they behave like
 // booleans, but can also accept a string value.
-['capture', 'download'].forEach(name => {
+[
+  'capture',
+  'download',
+
+  // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
+].forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
     OVERLOADED_BOOLEAN,
     false, // mustUseProperty
-    name.toLowerCase(), // attributeName
+    name, // attributeName
     null, // attributeNamespace
   );
 });
 
 // These are HTML attributes that must be positive numbers.
-['cols', 'rows', 'size', 'span'].forEach(name => {
+[
+  'cols',
+  'rows',
+  'size',
+  'span',
+
+  // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
+].forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
     POSITIVE_NUMERIC,
     false, // mustUseProperty
-    name.toLowerCase(), // attributeName
+    name, // attributeName
     null, // attributeNamespace
   );
 });
@@ -436,6 +466,10 @@ const capitalize = token => token[1].toUpperCase();
   'writing-mode',
   'xmlns:xlink',
   'x-height',
+
+  // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
 ].forEach(attributeName => {
   const name = attributeName.replace(CAMELIZE, capitalize);
   properties[name] = new PropertyInfoRecord(
@@ -456,6 +490,10 @@ const capitalize = token => token[1].toUpperCase();
   'xlink:show',
   'xlink:title',
   'xlink:type',
+
+  // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
 ].forEach(attributeName => {
   const name = attributeName.replace(CAMELIZE, capitalize);
   properties[name] = new PropertyInfoRecord(
@@ -468,7 +506,15 @@ const capitalize = token => token[1].toUpperCase();
 });
 
 // String SVG attributes with the xml namespace.
-['xml:base', 'xml:lang', 'xml:space'].forEach(attributeName => {
+[
+  'xml:base',
+  'xml:lang',
+  'xml:space',
+
+  // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
+].forEach(attributeName => {
   const name = attributeName.replace(CAMELIZE, capitalize);
   properties[name] = new PropertyInfoRecord(
     name,

@@ -5,24 +5,199 @@
     Click to see more.
   </summary>
 
+</details>
+
+## 16.4.2 (August 1, 2018)
+
+### React DOM Server
+
+* Fix a [potential XSS vulnerability when the attacker controls an attribute name](https://reactjs.org/blog/2018/08/01/react-v-16-4-2.html) (`CVE-2018-6341`). This fix is available in the latest `react-dom@16.4.2`, as well as in previous affected minor versions: `react-dom@16.0.1`, `react-dom@16.1.2`, `react-dom@16.2.1`, and `react-dom@16.3.3`. ([@gaearon](https://github.com/gaearon) in [#13302](https://github.com/facebook/react/pull/13302))
+
+* Fix a crash in the server renderer when an attribute is called `hasOwnProperty`. This fix is only available in `react-dom@16.4.2`. ([@gaearon](https://github.com/gaearon) in [#13303](https://github.com/facebook/react/pull/13303))
+
+## 16.4.1 (June 13, 2018)
+
 ### React
 
-* Fix a false positive warning in IE11 when using `React.Fragment`. ([@XaveScor](https://github.com/XaveScor) in [#11823](https://github.com/facebook/react/pull/11823))
+* You can now assign `propTypes` to components returned by `React.ForwardRef`. ([@bvaughn](https://github.com/bvaughn) in [#12911](https://github.com/facebook/react/pull/12911))
 
 ### React DOM
 
+* Fix a crash when the input `type` changes from some other types to `text`. ([@spirosikmd](https://github.com/spirosikmd) in [#12135](https://github.com/facebook/react/pull/12135))
+* Fix a crash in IE11 when restoring focus to an SVG element. ([@ThaddeusJiang](https://github.com/ThaddeusJiang) in [#12996](https://github.com/facebook/react/pull/12996))
+* Fix a range input not updating in some cases. ([@Illu](https://github.com/Illu) in [#12939](https://github.com/facebook/react/pull/12939))
+* Fix input validation triggering unnecessarily in Firefox. ([@nhunzaker](https://github.com/nhunzaker) in [#12925](https://github.com/facebook/react/pull/12925))
+* Fix an incorrect `event.target` value for the `onChange` event in IE9. ([@nhunzaker](https://github.com/nhunzaker) in [#12976](https://github.com/facebook/react/pull/12976))
+* Fix a false positive error when returning an empty `<React.Fragment />` from a component. ([@philipp-spiess](https://github.com/philipp-spiess) in [#12966](https://github.com/facebook/react/pull/12966))
+
+### React DOM Server
+
+* Fix an incorrect value being provided by new context API. ([@ericsoderberghp](https://github.com/ericsoderberghp) in [#12985](https://github.com/facebook/react/pull/12985), [@gaearon](https://github.com/gaearon) in [#13019](https://github.com/facebook/react/pull/13019))
+
+### React Test Renderer
+
+* Allow multiple root children in test renderer traversal API. ([@gaearon](https://github.com/gaearon) in [#13017](https://github.com/facebook/react/pull/13017))
+* Fix `getDerivedStateFromProps()` in the shallow renderer to not discard the pending state. ([@fatfisz](https://github.com/fatfisz) in [#13030](https://github.com/facebook/react/pull/13030))
+
+## 16.4.0 (May 23, 2018)
+
+### React
+
+* Add a new [experimental](https://github.com/reactjs/rfcs/pull/51) `React.unstable_Profiler` component for measuring performance. ([@bvaughn](https://github.com/bvaughn) in [#12745](https://github.com/facebook/react/pull/12745))
+
+### React DOM
+
+* Add support for the Pointer Events specification. ([@philipp-spiess](https://github.com/philipp-spiess) in [#12507](https://github.com/facebook/react/pull/12507))
+* Properly call `getDerivedStateFromProps()` regardless of the reason for re-rendering. ([@acdlite](https://github.com/acdlite) in [#12600](https://github.com/facebook/react/pull/12600) and [#12802](https://github.com/facebook/react/pull/12802))
+* Fix a bug that prevented context propagation in some cases. ([@gaearon](https://github.com/gaearon) in [#12708](https://github.com/facebook/react/pull/12708))
+* Fix re-rendering of components using `forwardRef()` on a deeper `setState()`. ([@gaearon](https://github.com/gaearon) in [#12690](https://github.com/facebook/react/pull/12690))
+* Fix some attributes incorrectly getting removed from custom element nodes. ([@airamrguez](https://github.com/airamrguez) in [#12702](https://github.com/facebook/react/pull/12702))
+* Fix context providers to not bail out on children if there's a legacy context provider above. ([@gaearon](https://github.com/gaearon) in [#12586](https://github.com/facebook/react/pull/12586))
+* Add the ability to specify `propTypes` on a context provider component. ([@nicolevy](https://github.com/nicolevy) in [#12658](https://github.com/facebook/react/pull/12658))
+* Fix a false positive warning when using `react-lifecycles-compat` in `<StrictMode>`. ([@bvaughn](https://github.com/bvaughn) in [#12644](https://github.com/facebook/react/pull/12644))
+* Warn when the `forwardRef()` render function has `propTypes` or `defaultProps`. ([@bvaughn](https://github.com/bvaughn) in [#12644](https://github.com/facebook/react/pull/12644))
+* Improve how `forwardRef()` and context consumers are displayed in the component stack. ([@sophiebits](https://github.com/sophiebits) in [#12777](https://github.com/facebook/react/pull/12777))
+* Change internal event names. This can break third-party packages that rely on React internals in unsupported ways. ([@philipp-spiess](https://github.com/philipp-spiess) in [#12629](https://github.com/facebook/react/pull/12629))
+
+### React Test Renderer
+
+* Fix the `getDerivedStateFromProps()` support to match the new React DOM behavior. ([@koba04](https://github.com/koba04) in [#12676](https://github.com/facebook/react/pull/12676))
+* Fix a `testInstance.parent` crash when the parent is a fragment or another special node. ([@gaearon](https://github.com/gaearon) in [#12813](https://github.com/facebook/react/pull/12813))
+* `forwardRef()` components are now discoverable by the test renderer traversal methods. ([@gaearon](https://github.com/gaearon) in [#12725](https://github.com/facebook/react/pull/12725))
+* Shallow renderer now ignores `setState()` updaters that return `null` or `undefined`. ([@koba04](https://github.com/koba04) in [#12756](https://github.com/facebook/react/pull/12756))
+
+### React ART
+
+* Fix reading context provided from the tree managed by React DOM. ([@acdlite](https://github.com/acdlite) in [#12779](https://github.com/facebook/react/pull/12779))
+
+### React Call Return (Experimental)
+
+* This experiment was deleted because it was affecting the bundle size and the API wasn't good enough. It's likely to come back in the future in some other form. ([@gaearon](https://github.com/gaearon) in [#12820](https://github.com/facebook/react/pull/12820))
+
+### React Reconciler (Experimental)
+
+* The [new host config shape](https://github.com/facebook/react/blob/c601f7a64640290af85c9f0e33c78480656b46bc/packages/react-noop-renderer/src/createReactNoop.js#L82-L285) is flat and doesn't use nested objects. ([@gaearon](https://github.com/gaearon) in [#12792](https://github.com/facebook/react/pull/12792))
+
+## 16.3.3 (August 1, 2018)
+
+### React DOM Server
+
+* Fix a [potential XSS vulnerability when the attacker controls an attribute name](https://reactjs.org/blog/2018/08/01/react-v-16-4-2.html) (`CVE-2018-6341`). This fix is available in the latest `react-dom@16.4.2`, as well as in previous affected minor versions: `react-dom@16.0.1`, `react-dom@16.1.2`, `react-dom@16.2.1`, and `react-dom@16.3.3`. ([@gaearon](https://github.com/gaearon) in [#13302](https://github.com/facebook/react/pull/13302))
+
+## 16.3.2 (April 16, 2018)
+
+### React
+
+* Improve the error message when passing `null` or `undefined` to `React.cloneElement`. ([@nicolevy](https://github.com/nicolevy) in [#12534](https://github.com/facebook/react/pull/12534))
+
+### React DOM
+
+* Fix an IE crash in development when using `<StrictMode>`. ([@bvaughn](https://github.com/bvaughn) in [#12546](https://github.com/facebook/react/pull/12546))
+* Fix labels in User Timing measurements for new component types. ([@bvaughn](https://github.com/bvaughn) in [#12609](https://github.com/facebook/react/pull/12609))
+* Improve the warning about wrong component type casing. ([@nicolevy](https://github.com/nicolevy) in [#12533](https://github.com/facebook/react/pull/12533))
+* Improve general performance in development mode. ([@gaearon](https://github.com/gaearon) in [#12537](https://github.com/facebook/react/pull/12537))
+* Improve performance of the experimental `unstable_observedBits` API with nesting. ([@gaearon](https://github.com/gaearon) in [#12543](https://github.com/facebook/react/pull/12543))
+
+### React Test Renderer
+
+* Add a UMD build. ([@bvaughn](https://github.com/bvaughn) in [#12594](https://github.com/facebook/react/pull/12594))
+
+## 16.3.1 (April 3, 2018)
+
+### React
+
+* Fix a false positive warning in IE11 when using `Fragment`. ([@heikkilamarko](https://github.com/heikkilamarko) in [#12504](https://github.com/facebook/react/pull/12504))
+* Prefix a private API. ([@Andarist](https://github.com/Andarist) in [#12501](https://github.com/facebook/react/pull/12501))
+* Improve the warning when calling `setState()` in constructor. ([@gaearon](https://github.com/gaearon) in [#12532](https://github.com/facebook/react/pull/12532))
+
+### React DOM
+
+* Fix `getDerivedStateFromProps()` not getting applied in some cases. ([@acdlite](https://github.com/acdlite) in [#12528](https://github.com/facebook/react/pull/12528))
+* Fix a performance regression in development mode. ([@gaearon](https://github.com/gaearon) in [#12510](https://github.com/facebook/react/pull/12510))
+* Fix error handling bugs in development mode. ([@gaearon](https://github.com/gaearon) and [@acdlite](https://github.com/acdlite) in [#12508](https://github.com/facebook/react/pull/12508))
+* Improve user timing API messages for profiling. ([@flarnie](https://github.com/flarnie) in [#12384](https://github.com/facebook/react/pull/12384))
+
+### Create Subscription
+
+* Set the package version to be in sync with React releases. ([@bvaughn](https://github.com/bvaughn) in [#12526](https://github.com/facebook/react/pull/12526))
+* Add a peer dependency on React 16.3+. ([@NMinhNguyen](https://github.com/NMinhNguyen) in [#12496](https://github.com/facebook/react/pull/12496))
+
+## 16.3.0 (March 29, 2018)
+
+### React
+
+* Add a new officially supported context API. ([@acdlite](https://github.com/acdlite) in [#11818](https://github.com/facebook/react/pull/11818))
+* Add a new `React.createRef()` API as an ergonomic alternative to callback refs. ([@trueadm](https://github.com/trueadm) in [#12162](https://github.com/facebook/react/pull/12162))
+* Add a new `React.forwardRef()` API to let components forward their refs to a child. ([@bvaughn](https://github.com/bvaughn) in [#12346](https://github.com/facebook/react/pull/12346))
+* Fix a false positive warning in IE11 when using `React.Fragment`. ([@XaveScor](https://github.com/XaveScor) in [#11823](https://github.com/facebook/react/pull/11823))
+* Replace `React.unstable_AsyncComponent` with `React.unstable_AsyncMode`. ([@acdlite](https://github.com/acdlite) in [#12117](https://github.com/facebook/react/pull/12117))
+* Improve the error message when calling `setState()` on an unmounted component. ([@sophiebits](https://github.com/sophiebits) in [#12347](https://github.com/facebook/react/pull/12347))
+
+### React DOM
+
+* Add a new `getDerivedStateFromProps()` lifecycle and `UNSAFE_` aliases for the legacy lifecycles. ([@bvaughn](https://github.com/bvaughn) in [#12028](https://github.com/facebook/react/pull/12028))
+* Add a new `getSnapshotBeforeUpdate()` lifecycle. ([@bvaughn](https://github.com/bvaughn) in [#12404](https://github.com/facebook/react/pull/12404))
+* Add a new `<React.StrictMode>` wrapper to help prepare apps for async rendering. ([@bvaughn](https://github.com/bvaughn) in [#12083](https://github.com/facebook/react/pull/12083))
+* Add support for `onLoad` and `onError` events on the `<link>` tag. ([@roderickhsiao](https://github.com/roderickhsiao) in [#11825](https://github.com/facebook/react/pull/11825))
+* Add support for `noModule` boolean attribute on the `<script>` tag. ([@aweary](https://github.com/aweary) in [#11900](https://github.com/facebook/react/pull/11900))
 * Fix minor DOM input bugs in IE and Safari. ([@nhunzaker](https://github.com/nhunzaker) in [#11534](https://github.com/facebook/react/pull/11534))
+* Correctly detect Ctrl + Enter in `onKeyPress` in more browsers. ([@nstraub](https://github.com/nstraub) in [#10514](https://github.com/facebook/react/pull/10514))
 * Fix containing elements getting focused on SSR markup mismatch. ([@koba04](https://github.com/koba04) in [#11737](https://github.com/facebook/react/pull/11737))
 * Fix `value` and `defaultValue` to ignore Symbol values. ([@nhunzaker](https://github.com/nhunzaker) in [#11741](https://github.com/facebook/react/pull/11741))
+* Fix refs to class components not getting cleaned up when the attribute is removed. ([@bvaughn](https://github.com/bvaughn) in [#12178](https://github.com/facebook/react/pull/12178))
+* Fix an IE/Edge issue when rendering inputs into a different window. ([@M-ZubairAhmed](https://github.com/M-ZubairAhmed) in [#11870](https://github.com/facebook/react/pull/11870))
 * Throw with a meaningful message if the component runs after jsdom has been destroyed. ([@gaearon](https://github.com/gaearon) in [#11677](https://github.com/facebook/react/pull/11677))
+* Don't crash if there is a global variable called `opera` with a `null` value. [@alisherdavronov](https://github.com/alisherdavronov) in [#11854](https://github.com/facebook/react/pull/11854))
+* Don't check for old versions of Opera. ([@skiritsis](https://github.com/skiritsis) in [#11921](https://github.com/facebook/react/pull/11921))
 * Deduplicate warning messages about `<option selected>`. ([@watadarkstar](https://github.com/watadarkstar) in [#11821](https://github.com/facebook/react/pull/11821))
+* Deduplicate warning messages about invalid callback. ([@yenshih](https://github.com/yenshih) in [#11833](https://github.com/facebook/react/pull/11833))
 * Deprecate `ReactDOM.unstable_createPortal()` in favor of `ReactDOM.createPortal()`. ([@prometheansacrifice](https://github.com/prometheansacrifice) in [#11747](https://github.com/facebook/react/pull/11747))
+* Don't emit User Timing entries for context types. ([@abhaynikam](https://github.com/abhaynikam) in [#12250](https://github.com/facebook/react/pull/12250))
+* Improve the error message when context consumer child isn't a function. ([@raunofreiberg](https://github.com/raunofreiberg) in [#12267](https://github.com/facebook/react/pull/12267)) 
+* Improve the error message when adding a ref to a functional component. ([@skiritsis](https://github.com/skiritsis) in [#11782](https://github.com/facebook/react/pull/11782))
 
 ### React DOM Server
 
 * Prevent an infinite loop when attempting to render portals with SSR. ([@gaearon](https://github.com/gaearon) in [#11709](https://github.com/facebook/react/pull/11709))
+* Warn if a class doesn't extend `React.Component`. ([@wyze](https://github.com/wyze) in [#11993](https://github.com/facebook/react/pull/11993))
+* Fix an issue with `this.state` of different components getting mixed up. ([@sophiebits](https://github.com/sophiebits) in [#12323](https://github.com/facebook/react/pull/12323))
+* Provide a better message when component type is undefined. ([@HeroProtagonist](https://github.com/HeroProtagonist) in [#11966](https://github.com/facebook/react/pull/11966))
 
-</details>
+## React Test Renderer
+
+* Fix handling of fragments in `toTree()`. ([@maciej-ka](https://github.com/maciej-ka) in [#12107](https://github.com/facebook/react/pull/12107) and [@gaearon](https://github.com/gaearon) in [#12154](https://github.com/facebook/react/pull/12154))
+* Shallow renderer should assign state to `null` for components that don't set it. ([@jwbay](https://github.com/jwbay) in [#11965](https://github.com/facebook/react/pull/11965))
+* Shallow renderer should filter legacy context according to `contextTypes`. ([@koba04](https://github.com/koba04) in [#11922](https://github.com/facebook/react/pull/11922))
+* Add an unstable API for testing asynchronous rendering. ([@acdlite](https://github.com/acdlite) in [#12478](https://github.com/facebook/react/pull/12478))
+
+### React Is (New)
+
+* First release of the [new package](https://github.com/facebook/react/tree/master/packages/react-is) that libraries can use to detect different React node types. ([@bvaughn](https://github.com/bvaughn) in [#12199](https://github.com/facebook/react/pull/12199))
+* Add `ReactIs.isValidElementType()` to help higher-order components validate their inputs. ([@jamesreggio](https://github.com/jamesreggio) in [#12483](https://github.com/facebook/react/pull/12483))
+
+### React Lifecycles Compat (New)
+
+* First release of the [new package](https://github.com/reactjs/react-lifecycles-compat) to help library developers target multiple versions of React. ([@bvaughn](https://github.com/bvaughn) in [#12105](https://github.com/facebook/react/pull/12105))
+
+### Create Subscription (New)
+
+* First release of the [new package](https://github.com/facebook/react/tree/master/packages/create-subscription) to subscribe to external data sources safely for async rendering. ([@bvaughn](https://github.com/bvaughn) in [#12325](https://github.com/facebook/react/pull/12325))
+
+### React Reconciler (Experimental)
+
+* Expose `react-reconciler/persistent` for building renderers that use persistent data structures. ([@gaearon](https://github.com/gaearon) in [#12156](https://github.com/facebook/react/pull/12156))
+* Pass host context to `finalizeInitialChildren()`. ([@jquense](https://github.com/jquense) in [#11970](https://github.com/facebook/react/pull/11970))
+* Remove `useSyncScheduling` from the host config. ([@acdlite](https://github.com/acdlite) in [#11771](https://github.com/facebook/react/pull/11771))
+
+### React Call Return (Experimental)
+
+* Fix a crash on updates. ([@rmhartog](https://github.com/rmhartog) in [#11955](https://github.com/facebook/react/pull/11955))
+
+## 16.2.1 (August 1, 2018)
+
+### React DOM Server
+
+* Fix a [potential XSS vulnerability when the attacker controls an attribute name](https://reactjs.org/blog/2018/08/01/react-v-16-4-2.html) (`CVE-2018-6341`). This fix is available in the latest `react-dom@16.4.2`, as well as in previous affected minor versions: `react-dom@16.0.1`, `react-dom@16.1.2`, `react-dom@16.2.1`, and `react-dom@16.3.3`. ([@gaearon](https://github.com/gaearon) in [#13302](https://github.com/facebook/react/pull/13302))
 
 ## 16.2.0 (November 28, 2017)
 
@@ -42,11 +217,17 @@
 
 ### React Reconciler
 
-* Expose `react-reconciler/reflection` with utlities useful to custom renderers. ([@rivenhk](https://github.com/rivenhk) in [#11683](https://github.com/facebook/react/pull/11683))
+* Expose `react-reconciler/reflection` with utilities useful to custom renderers. ([@rivenhk](https://github.com/rivenhk) in [#11683](https://github.com/facebook/react/pull/11683))
 
 ### Internal Changes
 
 * Many tests were rewritten against the public API. Big thanks to [everyone who contributed](https://github.com/facebook/react/issues/11299)!
+
+## 16.1.2 (August 1, 2018)
+
+### React DOM Server
+
+* Fix a [potential XSS vulnerability when the attacker controls an attribute name](https://reactjs.org/blog/2018/08/01/react-v-16-4-2.html) (`CVE-2018-6341`). This fix is available in the latest `react-dom@16.4.2`, as well as in previous affected minor versions: `react-dom@16.0.1`, `react-dom@16.1.2`, `react-dom@16.2.1`, and `react-dom@16.3.3`. ([@gaearon](https://github.com/gaearon) in [#13302](https://github.com/facebook/react/pull/13302))
 
 ## 16.1.1 (November 13, 2017)
 
@@ -89,14 +270,14 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 * Fix `onMouseEnter` and `onMouseLeave` firing on wrong elements. ([@gaearon](https://github.com/gaearon) in [#11164](https://github.com/facebook/react/pull/11164))
 * Fix `null` showing up in a warning instead of the component stack. ([@gaearon](https://github.com/gaearon) in [#10915](https://github.com/facebook/react/pull/10915))
 * Fix IE11 crash in development mode. ([@leidegre](https://github.com/leidegre) in [#10921](https://github.com/facebook/react/pull/10921))
-* Fix `tabIndex` not getting applied to SVG elements. ([@gaearon](http://github.com/gaearon) in [#11034](https://github.com/facebook/react/pull/11034))
+* Fix `tabIndex` not getting applied to SVG elements. ([@gaearon](https://github.com/gaearon) in [#11034](https://github.com/facebook/react/pull/11034))
 * Fix SVG children not getting cleaned up on `dangerouslySetInnerHTML` in IE. ([@OriR](https://github.com/OriR) in [#11108](https://github.com/facebook/react/pull/11108))
-* Fix false positive text mismatch warning caused by newline normalization. ([@gaearon](http://github.com/gaearon) in [#11119](https://github.com/facebook/react/pull/11119))
+* Fix false positive text mismatch warning caused by newline normalization. ([@gaearon](https://github.com/gaearon) in [#11119](https://github.com/facebook/react/pull/11119))
 * Fix `form.reset()` to respect `defaultValue` on uncontrolled `<select>`. ([@aweary](https://github.com/aweary) in [#11057](https://github.com/facebook/react/pull/11057))
 * Fix `<textarea>` placeholder not rendering on IE11. ([@gaearon](https://github.com/gaearon) in [#11177](https://github.com/facebook/react/pull/11177))
 * Fix a crash rendering into shadow root. ([@gaearon](https://github.com/gaearon) in [#11037](https://github.com/facebook/react/pull/11037))
-* Fix false positive warning about hydrating mixed case SVG tags. ([@gaearon](http://github.com/gaearon) in [#11174](https://github.com/facebook/react/pull/11174))
-* Suppress the new unknown tag warning for `<dialog>` element. ([@gaearon](http://github.com/gaearon) in [#11035](https://github.com/facebook/react/pull/11035))
+* Fix false positive warning about hydrating mixed case SVG tags. ([@gaearon](https://github.com/gaearon) in [#11174](https://github.com/facebook/react/pull/11174))
+* Suppress the new unknown tag warning for `<dialog>` element. ([@gaearon](https://github.com/gaearon) in [#11035](https://github.com/facebook/react/pull/11035))
 * Warn when defining a non-existent `componentDidReceiveProps` method. ([@iamtommcc](https://github.com/iamtommcc) in [#11479](https://github.com/facebook/react/pull/11479))
 * Warn about function child no more than once. ([@andreysaleba](https://github.com/andreysaleba) in [#11120](https://github.com/facebook/react/pull/11120))
 * Warn about nested updates no more than once. ([@anushreesubramani](https://github.com/anushreesubramani) in [#11113](https://github.com/facebook/react/pull/11113))
@@ -105,16 +286,16 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 * Improve the warning about booleans passed to event handlers. ([@NicBonetto](https://github.com/NicBonetto) in [#11308](https://github.com/facebook/react/pull/11308))
 * Improve the warning when a multiple `select` gets null `value`. ([@Hendeca](https://github.com/Hendeca) in [#11141](https://github.com/facebook/react/pull/11141))
 * Move link in the warning message to avoid redirect. ([@marciovicente](https://github.com/marciovicente) in [#11400](https://github.com/facebook/react/pull/11400))
-* Add a way to suppress the React DevTools installation prompt. ([@gaearon](http://github.com/gaearon) in [#11448](https://github.com/facebook/react/pull/11448))
+* Add a way to suppress the React DevTools installation prompt. ([@gaearon](https://github.com/gaearon) in [#11448](https://github.com/facebook/react/pull/11448))
 * Remove unused code. ([@gaearon](https://github.com/gaearon) in [#10802](https://github.com/facebook/react/pull/10802), [#10803](https://github.com/facebook/react/pull/10803))
 
 ### React DOM Server
 
-* Add a new `suppressHydrationWarning` attribute for intentional client/server text mismatches. ([@sebmarkbage](http://github.com/sebmarkbage) in [#11126](https://github.com/facebook/react/pull/11126))
-* Fix markup generation when components return strings. ([@gaearon](http://github.com/gaearon) in [#11109](https://github.com/facebook/react/pull/11109))
+* Add a new `suppressHydrationWarning` attribute for intentional client/server text mismatches. ([@sebmarkbage](https://github.com/sebmarkbage) in [#11126](https://github.com/facebook/react/pull/11126))
+* Fix markup generation when components return strings. ([@gaearon](https://github.com/gaearon) in [#11109](https://github.com/facebook/react/pull/11109))
 * Fix obscure error message when passing an invalid style value. ([@iamdustan](https://github.com/iamdustan) in [#11173](https://github.com/facebook/react/pull/11173))
-* Include the `autoFocus` attribute into SSR markup. ([@gaearon](http://github.com/gaearon) in [#11192](https://github.com/facebook/react/pull/11192))
-* Include the component stack into more warnings. ([@gaearon](http://github.com/gaearon) in [#11284](https://github.com/facebook/react/pull/11284))
+* Include the `autoFocus` attribute into SSR markup. ([@gaearon](https://github.com/gaearon) in [#11192](https://github.com/facebook/react/pull/11192))
+* Include the component stack into more warnings. ([@gaearon](https://github.com/gaearon) in [#11284](https://github.com/facebook/react/pull/11284))
 
 ### React Test Renderer and Test Utils
 
@@ -137,6 +318,12 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 ### React Call Return (Experimental)
 
 * First release of the [new experimental package](https://github.com/facebook/react/tree/master/packages/react-call-return) for parent-child communication. ([@gaearon](https://github.com/gaearon) in [#11364](https://github.com/facebook/react/pull/11364))
+
+## 16.0.1 (August 1, 2018)
+
+### React DOM Server
+
+* Fix a [potential XSS vulnerability when the attacker controls an attribute name](https://reactjs.org/blog/2018/08/01/react-v-16-4-2.html) (`CVE-2018-6341`). This fix is available in the latest `react-dom@16.4.2`, as well as in previous affected minor versions: `react-dom@16.0.1`, `react-dom@16.1.2`, `react-dom@16.2.1`, and `react-dom@16.3.3`. ([@gaearon](https://github.com/gaearon) in [#13302](https://github.com/facebook/react/pull/13302))
 
 ## 16.0.0 (September 26, 2017)
 
@@ -615,7 +802,7 @@ Each of these changes will continue to work as before with a new warning until t
 - React DOM now correctly handles `borderImageOutset`, `borderImageWidth`, `borderImageSlice`, `floodOpacity`, `strokeDasharray`, and `strokeMiterlimit` as unitless CSS properties. ([@rofrischmann](https://github.com/rofrischmann) in [#6210](https://github.com/facebook/react/pull/6210) and [#6270](https://github.com/facebook/react/pull/6270))
 - React DOM now supports the `onAnimationStart`, `onAnimationEnd`, `onAnimationIteration`, `onTransitionEnd`, and `onInvalid` events. Support for `onLoad` has been added to `object` elements. ([@tomduncalf](https://github.com/tomduncalf) in [#5187](https://github.com/facebook/react/pull/5187),  [@milesj](https://github.com/milesj) in [#6005](https://github.com/facebook/react/pull/6005), and [@ara4n](https://github.com/ara4n) in [#5781](https://github.com/facebook/react/pull/5781))
 - React DOM now defaults to using DOM attributes instead of properties, which fixes a few edge case bugs. Additionally the nullification of values (ex: `href={null}`) now results in the forceful removal, no longer trying to set to the default value used by browsers in the absence of a value. ([@syranide](https://github.com/syranide) in [#1510](https://github.com/facebook/react/pull/1510))
-- React DOM does not mistakingly coerce `children` to strings for Web Components. ([@jimfb](https://github.com/jimfb) in [#5093](https://github.com/facebook/react/pull/5093))
+- React DOM does not mistakenly coerce `children` to strings for Web Components. ([@jimfb](https://github.com/jimfb) in [#5093](https://github.com/facebook/react/pull/5093))
 - React DOM now correctly normalizes SVG `<use>` events. ([@edmellum](https://github.com/edmellum) in [#5720](https://github.com/facebook/react/pull/5720))
 - React DOM does not throw if a `<select>` is unmounted while its `onChange` handler is executing. ([@sambev](https://github.com/sambev) in [#6028](https://github.com/facebook/react/pull/6028))
 - React DOM does not throw in Windows 8 apps. ([@Andrew8xx8](https://github.com/Andrew8xx8) in [#6063](https://github.com/facebook/react/pull/6063))
@@ -752,7 +939,7 @@ Each of these changes will continue to work as before with a new warning until t
 
 - Added `React.Children.toArray` which takes a nested children object and returns a flat array with keys assigned to each child. This helper makes it easier to manipulate collections of children in your `render` methods, especially if you want to reorder or slice `this.props.children` before passing it down. In addition, `React.Children.map` now returns plain arrays too.
 - React uses `console.error` instead of `console.warn` for warnings so that browsers show a full stack trace in the console. (Our warnings appear when you use patterns that will break in future releases and for code that is likely to behave unexpectedly, so we do consider our warnings to be “must-fix” errors.)
-- Previously, including untrusted objects as React children [could result in an XSS security vulnerability](http://danlec.com/blog/xss-via-a-spoofed-react-element). This problem should be avoided by properly validating input at the application layer and by never passing untrusted objects around your application code. As an additional layer of protection, [React now tags elements](https://github.com/facebook/react/pull/4832) with a specific [ES2015 (ES6) `Symbol`](http://www.2ality.com/2014/12/es6-symbols.html) in browsers that support it, in order to ensure that React never considers untrusted JSON to be a valid element. If this extra security protection is important to you, you should add a `Symbol` polyfill for older browsers, such as the one included by [Babel’s polyfill](http://babeljs.io/docs/usage/polyfill/).
+- Previously, including untrusted objects as React children [could result in an XSS security vulnerability](http://danlec.com/blog/xss-via-a-spoofed-react-element). This problem should be avoided by properly validating input at the application layer and by never passing untrusted objects around your application code. As an additional layer of protection, [React now tags elements](https://github.com/facebook/react/pull/4832) with a specific [ES2015 (ES6) `Symbol`](http://www.2ality.com/2014/12/es6-symbols.html) in browsers that support it, in order to ensure that React never considers untrusted JSON to be a valid element. If this extra security protection is important to you, you should add a `Symbol` polyfill for older browsers, such as the one included by [Babel’s polyfill](https://babeljs.io/docs/usage/polyfill/).
 - When possible, React DOM now generates XHTML-compatible markup.
 - React DOM now supports these standard HTML attributes: `capture`, `challenge`, `inputMode`, `is`, `keyParams`, `keyType`, `minLength`, `summary`, `wrap`. It also now supports these non-standard attributes: `autoSave`, `results`, `security`.
 - React DOM now supports these SVG attributes, which render into namespaced attributes: `xlinkActuate`, `xlinkArcrole`, `xlinkHref`, `xlinkRole`, `xlinkShow`, `xlinkTitle`, `xlinkType`, `xmlBase`, `xmlLang`, `xmlSpace`.
@@ -786,7 +973,7 @@ Each of these changes will continue to work as before with a new warning until t
 
 #### Breaking Changes
 
-- The `react-tools` package and `JSXTransformer.js` browser file [have been deprecated](https://reactjs.org/blog/2015/06/12/deprecating-jstransform-and-react-tools.html). You can continue using version `0.13.3` of both, but we no longer support them and recommend migrating to [Babel](http://babeljs.io/), which has built-in support for React and JSX.
+- The `react-tools` package and `JSXTransformer.js` browser file [have been deprecated](https://reactjs.org/blog/2015/06/12/deprecating-jstransform-and-react-tools.html). You can continue using version `0.13.3` of both, but we no longer support them and recommend migrating to [Babel](https://babeljs.io), which has built-in support for React and JSX.
 
 #### New Features
 

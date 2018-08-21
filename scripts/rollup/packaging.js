@@ -14,10 +14,16 @@ const {
   UMD_PROD,
   NODE_DEV,
   NODE_PROD,
-  FB_DEV,
-  FB_PROD,
-  RN_DEV,
-  RN_PROD,
+  NODE_PROFILING,
+  FB_WWW_DEV,
+  FB_WWW_PROD,
+  FB_WWW_PROFILING,
+  RN_OSS_DEV,
+  RN_OSS_PROD,
+  RN_OSS_PROFILING,
+  RN_FB_DEV,
+  RN_FB_PROD,
+  RN_FB_PROFILING,
 } = Bundles.bundleTypes;
 
 function getPackageName(name) {
@@ -31,25 +37,33 @@ function getBundleOutputPaths(bundleType, filename, packageName) {
   switch (bundleType) {
     case NODE_DEV:
     case NODE_PROD:
-      return [`build/packages/${packageName}/cjs/${filename}`];
+    case NODE_PROFILING:
+      return [`build/node_modules/${packageName}/cjs/${filename}`];
     case UMD_DEV:
     case UMD_PROD:
       return [
-        `build/packages/${packageName}/umd/${filename}`,
+        `build/node_modules/${packageName}/umd/${filename}`,
         `build/dist/${filename}`,
       ];
-    case FB_DEV:
-    case FB_PROD:
+    case FB_WWW_DEV:
+    case FB_WWW_PROD:
+    case FB_WWW_PROFILING:
       return [`build/facebook-www/${filename}`];
-    case RN_DEV:
-    case RN_PROD:
+    case RN_OSS_DEV:
+    case RN_OSS_PROD:
+    case RN_OSS_PROFILING:
       switch (packageName) {
-        case 'react-rt-renderer':
-          return [`build/react-rt/${filename}`];
-        case 'react-cs-renderer':
-          return [`build/react-cs/${filename}`];
         case 'react-native-renderer':
-          return [`build/react-native/${filename}`];
+          return [`build/react-native/oss/${filename}`];
+        default:
+          throw new Error('Unknown RN package.');
+      }
+    case RN_FB_DEV:
+    case RN_FB_PROD:
+    case RN_FB_PROFILING:
+      switch (packageName) {
+        case 'react-native-renderer':
+          return [`build/react-native/fb/${filename}`];
         default:
           throw new Error('Unknown RN package.');
       }
@@ -77,16 +91,7 @@ async function copyRNShims() {
       require.resolve('react-native-renderer/src/ReactNativeTypes.js'),
       'build/react-native/shims/ReactNativeTypes.js'
     ),
-    // React Native CS
-    asyncCopyTo(
-      require.resolve('react-cs-renderer/src/ReactNativeCSTypes.js'),
-      'build/react-cs/shims/ReactNativeCSTypes.js'
-    ),
-    // React Native RT
-    asyncCopyTo(
-      require.resolve('react-rt-renderer/src/ReactNativeRTTypes.js'),
-      'build/react-rt/shims/ReactNativeRTTypes.js'
-    ),
+    asyncCopyTo(`${__dirname}/shims/react-native-fb`, 'build/react-native/fb'),
   ]);
 }
 
@@ -101,7 +106,7 @@ function getTarOptions(tgzName, packageName) {
   const CONTENTS_FOLDER = 'package';
   return {
     src: tgzName,
-    dest: `build/packages/${packageName}`,
+    dest: `build/node_modules/${packageName}`,
     tar: {
       entries: [CONTENTS_FOLDER],
       map(header) {
@@ -115,31 +120,31 @@ function getTarOptions(tgzName, packageName) {
 
 async function prepareNpmPackage(name) {
   await Promise.all([
-    asyncCopyTo('LICENSE', `build/packages/${name}/LICENSE`),
+    asyncCopyTo('LICENSE', `build/node_modules/${name}/LICENSE`),
     asyncCopyTo(
       `packages/${name}/package.json`,
-      `build/packages/${name}/package.json`
+      `build/node_modules/${name}/package.json`
     ),
     asyncCopyTo(
       `packages/${name}/README.md`,
-      `build/packages/${name}/README.md`
+      `build/node_modules/${name}/README.md`
     ),
-    asyncCopyTo(`packages/${name}/npm`, `build/packages/${name}`),
+    asyncCopyTo(`packages/${name}/npm`, `build/node_modules/${name}`),
   ]);
   const tgzName = (await asyncExecuteCommand(
-    `npm pack build/packages/${name}`
+    `npm pack build/node_modules/${name}`
   )).trim();
-  await asyncRimRaf(`build/packages/${name}`);
+  await asyncRimRaf(`build/node_modules/${name}`);
   await asyncExtractTar(getTarOptions(tgzName, name));
   unlinkSync(tgzName);
 }
 
 async function prepareNpmPackages() {
-  if (!existsSync('build/packages')) {
+  if (!existsSync('build/node_modules')) {
     // We didn't build any npm packages.
     return;
   }
-  const builtPackageFolders = readdirSync('build/packages').filter(
+  const builtPackageFolders = readdirSync('build/node_modules').filter(
     dir => dir.charAt(0) !== '.'
   );
   await Promise.all(builtPackageFolders.map(prepareNpmPackage));

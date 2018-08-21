@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
@@ -17,8 +18,8 @@ describe('createReactNativeComponentClass', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    createReactNativeComponentClass = require('../createReactNativeComponentClass')
-      .default;
+    createReactNativeComponentClass = require('ReactNativeViewConfigRegistry')
+      .register;
     React = require('react');
     ReactNative = require('react-native-renderer');
   });

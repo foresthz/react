@@ -10,10 +10,6 @@
 'use strict';
 
 describe('ReactMultiChild', () => {
-  function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
   let React;
   let ReactDOM;
 
@@ -40,9 +36,9 @@ describe('ReactMultiChild', () => {
         }
       }
 
-      expect(mockMount.mock.calls.length).toBe(0);
-      expect(mockUpdate.mock.calls.length).toBe(0);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(0);
+      expect(mockUpdate).toHaveBeenCalledTimes(0);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -51,9 +47,9 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUpdate.mock.calls.length).toBe(0);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUpdate).toHaveBeenCalledTimes(0);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -62,9 +58,9 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUpdate.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUpdate).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
     });
 
     it('should replace children with different constructors', () => {
@@ -81,8 +77,8 @@ describe('ReactMultiChild', () => {
         }
       }
 
-      expect(mockMount.mock.calls.length).toBe(0);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(0);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -91,8 +87,8 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -101,8 +97,8 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(1);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(1);
     });
 
     it('should NOT replace children with different owners', () => {
@@ -125,13 +121,13 @@ describe('ReactMultiChild', () => {
         }
       }
 
-      expect(mockMount.mock.calls.length).toBe(0);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(0);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(<WrapperComponent />, container);
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <WrapperComponent>
@@ -140,8 +136,8 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
     });
 
     it('should replace children with different keys', () => {
@@ -158,8 +154,8 @@ describe('ReactMultiChild', () => {
         }
       }
 
-      expect(mockMount.mock.calls.length).toBe(0);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(0);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -168,8 +164,8 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -178,13 +174,11 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(2);
-      expect(mockUnmount.mock.calls.length).toBe(1);
+      expect(mockMount).toHaveBeenCalledTimes(2);
+      expect(mockUnmount).toHaveBeenCalledTimes(1);
     });
 
     it('should warn for duplicated array keys with component stack info', () => {
-      spyOnDev(console, 'error');
-
       const container = document.createElement('div');
 
       class WrapperComponent extends React.Component {
@@ -205,32 +199,25 @@ describe('ReactMultiChild', () => {
 
       ReactDOM.render(<Parent>{[<div key="1" />]}</Parent>, container);
 
-      ReactDOM.render(
-        <Parent>{[<div key="1" />, <div key="1" />]}</Parent>,
-        container,
-      );
-
-      if (__DEV__) {
-        expect(console.error.calls.count()).toBe(1);
-        expect(
-          normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-        ).toContain(
-          'Encountered two children with the same key, `1`. ' +
-            'Keys should be unique so that components maintain their identity ' +
-            'across updates. Non-unique keys may cause children to be ' +
-            'duplicated and/or omitted — the behavior is unsupported and ' +
-            'could change in a future version.',
+      expect(() =>
+        ReactDOM.render(
+          <Parent>{[<div key="1" />, <div key="1" />]}</Parent>,
+          container,
+        ),
+      ).toWarnDev(
+        'Encountered two children with the same key, `1`. ' +
+          'Keys should be unique so that components maintain their identity ' +
+          'across updates. Non-unique keys may cause children to be ' +
+          'duplicated and/or omitted — the behavior is unsupported and ' +
+          'could change in a future version.\n' +
           '    in div (at **)\n' +
-            '    in WrapperComponent (at **)\n' +
-            '    in div (at **)\n' +
-            '    in Parent (at **)',
-        );
-      }
+          '    in WrapperComponent (at **)\n' +
+          '    in div (at **)\n' +
+          '    in Parent (at **)',
+      );
     });
 
     it('should warn for duplicated iterable keys with component stack info', () => {
-      spyOnDev(console, 'error');
-
       const container = document.createElement('div');
 
       class WrapperComponent extends React.Component {
@@ -272,54 +259,103 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      ReactDOM.render(
-        <Parent>{createIterable([<div key="1" />, <div key="1" />])}</Parent>,
-        container,
-      );
-
-      if (__DEV__) {
-        expect(console.error.calls.count()).toBe(1);
-        expect(
-          normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-        ).toContain(
-          'Encountered two children with the same key, `1`. ' +
-            'Keys should be unique so that components maintain their identity ' +
-            'across updates. Non-unique keys may cause children to be ' +
-            'duplicated and/or omitted — the behavior is unsupported and ' +
-            'could change in a future version.',
+      expect(() =>
+        ReactDOM.render(
+          <Parent>{createIterable([<div key="1" />, <div key="1" />])}</Parent>,
+          container,
+        ),
+      ).toWarnDev(
+        'Encountered two children with the same key, `1`. ' +
+          'Keys should be unique so that components maintain their identity ' +
+          'across updates. Non-unique keys may cause children to be ' +
+          'duplicated and/or omitted — the behavior is unsupported and ' +
+          'could change in a future version.\n' +
           '    in div (at **)\n' +
-            '    in WrapperComponent (at **)\n' +
-            '    in div (at **)\n' +
-            '    in Parent (at **)',
-        );
-      }
+          '    in WrapperComponent (at **)\n' +
+          '    in div (at **)\n' +
+          '    in Parent (at **)',
+      );
     });
   });
 
   it('should warn for using maps as children with owner info', () => {
-    spyOnDev(console, 'error');
     class Parent extends React.Component {
       render() {
         return <div>{new Map([['foo', 0], ['bar', 1]])}</div>;
       }
     }
     const container = document.createElement('div');
-    ReactDOM.render(<Parent />, container);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Using Maps as children is unsupported and will likely yield ' +
-          'unexpected results. Convert it to a sequence/iterable of keyed ' +
-          'ReactElements instead.\n' +
-          '    in div (at **)\n' +
-          '    in Parent (at **)',
-      );
+    expect(() => ReactDOM.render(<Parent />, container)).toWarnDev(
+      'Warning: Using Maps as children is unsupported and will likely yield ' +
+        'unexpected results. Convert it to a sequence/iterable of keyed ' +
+        'ReactElements instead.\n' +
+        '    in div (at **)\n' +
+        '    in Parent (at **)',
+    );
+  });
+
+  it('should warn for using generators as children', () => {
+    function* Foo() {
+      yield <h1 key="1">Hello</h1>;
+      yield <h1 key="2">World</h1>;
     }
+
+    const div = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<Foo />, div);
+    }).toWarnDev(
+      'Using Generators as children is unsupported and will likely yield ' +
+        'unexpected results because enumerating a generator mutates it. You may ' +
+        'convert it to an array with `Array.from()` or the `[...spread]` operator ' +
+        'before rendering. Keep in mind you might need to polyfill these features for older browsers.\n' +
+        '    in Foo (at **)',
+    );
+
+    // Test de-duplication
+    ReactDOM.render(<Foo />, div);
+  });
+
+  it('should not warn for using generators in legacy iterables', () => {
+    const fooIterable = {
+      '@@iterator': function*() {
+        yield <h1 key="1">Hello</h1>;
+        yield <h1 key="2">World</h1>;
+      },
+    };
+
+    function Foo() {
+      return fooIterable;
+    }
+
+    const div = document.createElement('div');
+    ReactDOM.render(<Foo />, div);
+    expect(div.textContent).toBe('HelloWorld');
+
+    ReactDOM.render(<Foo />, div);
+    expect(div.textContent).toBe('HelloWorld');
+  });
+
+  it('should not warn for using generators in modern iterables', () => {
+    const fooIterable = {
+      [Symbol.iterator]: function*() {
+        yield <h1 key="1">Hello</h1>;
+        yield <h1 key="2">World</h1>;
+      },
+    };
+
+    function Foo() {
+      return fooIterable;
+    }
+
+    const div = document.createElement('div');
+    ReactDOM.render(<Foo />, div);
+    expect(div.textContent).toBe('HelloWorld');
+
+    ReactDOM.render(<Foo />, div);
+    expect(div.textContent).toBe('HelloWorld');
   });
 
   it('should reorder bailed-out children', () => {
-    spyOnDev(console, 'error');
-
     class LetterInner extends React.Component {
       render() {
         return <div>{this.props.char}</div>;
@@ -355,7 +391,7 @@ describe('ReactMultiChild', () => {
     const log = [];
 
     class Spy extends React.Component {
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push(this.props.name + ' componentWillMount');
       }
       render() {

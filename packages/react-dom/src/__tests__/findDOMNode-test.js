@@ -65,9 +65,7 @@ describe('findDOMNode', () => {
   it('findDOMNode should reject random objects', () => {
     expect(function() {
       ReactDOM.findDOMNode({foo: 'bar'});
-    }).toThrowError(
-      'Element appears to be neither ReactComponent nor DOMNode. Keys: foo',
-    );
+    }).toThrowError('Argument appears to not be a ReactComponent. Keys: foo');
   });
 
   it('findDOMNode should reject unmounted objects with render func', () => {
@@ -88,7 +86,7 @@ describe('findDOMNode', () => {
 
   it('findDOMNode should not throw an error when called within a component that is not mounted', () => {
     class Bar extends React.Component {
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         expect(ReactDOM.findDOMNode(this)).toBeNull();
       }
 

@@ -25,7 +25,10 @@ const check = async ({cwd, packages}) => {
     const rootVersion = rootPackage.devDependencies[module];
 
     projectPackages.forEach(projectPackage => {
-      const projectVersion = projectPackage.dependencies[module];
+      // Not all packages have dependencies (eg react-is)
+      const projectVersion = projectPackage.dependencies
+        ? projectPackage.dependencies[module]
+        : undefined;
 
       if (rootVersion !== projectVersion && projectVersion !== undefined) {
         invalidDependencies.push(
@@ -36,7 +39,7 @@ const check = async ({cwd, packages}) => {
     });
   };
 
-  await Promise.all(dependencies.map(checkModule));
+  dependencies.forEach(checkModule);
 
   if (invalidDependencies.length) {
     throw Error(

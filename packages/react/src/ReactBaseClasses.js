@@ -5,11 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import emptyObject from 'fbjs/lib/emptyObject';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 
 import ReactNoopUpdateQueue from './ReactNoopUpdateQueue';
+
+const emptyObject = {};
+if (__DEV__) {
+  Object.freeze(emptyObject);
+}
 
 /**
  * Base class helpers for the updating state of a component.
@@ -17,6 +21,7 @@ import ReactNoopUpdateQueue from './ReactNoopUpdateQueue';
 function Component(props, context, updater) {
   this.props = props;
   this.context = context;
+  // If a component has string refs, we will assign a different object later.
   this.refs = emptyObject;
   // We initialize the default updater but the real one gets injected by the
   // renderer.
@@ -117,44 +122,24 @@ if (__DEV__) {
   }
 }
 
+function ComponentDummy() {}
+ComponentDummy.prototype = Component.prototype;
+
 /**
- * Base class helpers for the updating state of a component.
+ * Convenience component with default shallow equality check for sCU.
  */
 function PureComponent(props, context, updater) {
-  // Duplicated from Component.
   this.props = props;
   this.context = context;
+  // If a component has string refs, we will assign a different object later.
   this.refs = emptyObject;
-  // We initialize the default updater but the real one gets injected by the
-  // renderer.
   this.updater = updater || ReactNoopUpdateQueue;
 }
 
-function ComponentDummy() {}
-ComponentDummy.prototype = Component.prototype;
 const pureComponentPrototype = (PureComponent.prototype = new ComponentDummy());
 pureComponentPrototype.constructor = PureComponent;
 // Avoid an extra prototype jump for these methods.
 Object.assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = true;
 
-function AsyncComponent(props, context, updater) {
-  // Duplicated from Component.
-  this.props = props;
-  this.context = context;
-  this.refs = emptyObject;
-  // We initialize the default updater but the real one gets injected by the
-  // renderer.
-  this.updater = updater || ReactNoopUpdateQueue;
-}
-
-const asyncComponentPrototype = (AsyncComponent.prototype = new ComponentDummy());
-asyncComponentPrototype.constructor = AsyncComponent;
-// Avoid an extra prototype jump for these methods.
-Object.assign(asyncComponentPrototype, Component.prototype);
-asyncComponentPrototype.unstable_isAsyncReactComponent = true;
-asyncComponentPrototype.render = function() {
-  return this.props.children;
-};
-
-export {Component, PureComponent, AsyncComponent};
+export {Component, PureComponent};

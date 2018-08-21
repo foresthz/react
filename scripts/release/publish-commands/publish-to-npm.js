@@ -8,20 +8,33 @@ const {join} = require('path');
 const semver = require('semver');
 const {execRead, execUnlessDry, logPromise} = require('../utils');
 
-const push = async ({cwd, dry, packages, version}) => {
+const push = async ({cwd, dry, otp, packages, version, tag}) => {
   const errors = [];
   const isPrerelease = semver.prerelease(version);
-  const tag = isPrerelease ? 'next' : 'latest';
+  if (tag === undefined) {
+    // No tag was provided. Default to `latest` for stable releases and `next`
+    // for prereleases
+    tag = isPrerelease ? 'next' : 'latest';
+  } else if (tag === 'latest' && isPrerelease) {
+    throw new Error('The tag `latest` can only be used for stable versions.');
+  }
+
+  // Pass two factor auth code if provided:
+  // https://docs.npmjs.com/getting-started/using-two-factor-authentication
+  const twoFactorAuth = otp != null ? `--otp ${otp}` : '';
 
   const publishProject = async project => {
     try {
-      const path = join(cwd, 'build', 'packages', project);
-      await execUnlessDry(`npm publish --tag ${tag}`, {cwd: path, dry});
+      const path = join(cwd, 'build', 'node_modules', project);
+      await execUnlessDry(`npm publish --tag ${tag} ${twoFactorAuth}`, {
+        cwd: path,
+        dry,
+      });
 
       const packagePath = join(
         cwd,
         'build',
-        'packages',
+        'node_modules',
         project,
         'package.json'
       );
@@ -43,14 +56,12 @@ const push = async ({cwd, dry, packages, version}) => {
         if (remoteVersion !== packageVersion) {
           throw Error(
             chalk`Published version {yellow.bold ${packageVersion}} for ` +
-              chalk`{bold ${project}} but NPM shows {yellow.bold ${
-                remoteVersion
-              }}`
+              chalk`{bold ${project}} but NPM shows {yellow.bold ${remoteVersion}}`
           );
         }
 
         // If we've just published a stable release,
-        // Update the @next tag to also point to it (so @next doens't lag behind).
+        // Update the @next tag to also point to it (so @next doesn't lag behind).
         if (!isPrerelease) {
           await execUnlessDry(
             `npm dist-tag add ${project}@${packageVersion} next`,

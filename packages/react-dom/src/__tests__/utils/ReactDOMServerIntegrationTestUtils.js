@@ -41,6 +41,8 @@ module.exports = function(initModules) {
     if (console.error.calls && console.error.calls.reset) {
       console.error.calls.reset();
     } else {
+      // TODO: Rewrite tests that use this helper to enumerate expeceted errors.
+      // This will enable the helper to use the .toWarnDev() matcher instead of spying.
       spyOnDev(console, 'error');
     }
 
@@ -51,19 +53,17 @@ module.exports = function(initModules) {
       console.error.calls.count() !== 0
     ) {
       console.log(
-        `We expected ${
-          count
-        } warning(s), but saw ${console.error.calls.count()} warning(s).`,
+        `We expected ${count} warning(s), but saw ${console.error.calls.count()} warning(s).`,
       );
       if (console.error.calls.count() > 0) {
         console.log(`We saw these warnings:`);
         for (let i = 0; i < console.error.calls.count(); i++) {
-          console.log(console.error.calls.argsFor(i)[0]);
+          console.log(...console.error.calls.argsFor(i));
         }
       }
     }
     if (__DEV__) {
-      expect(console.error.calls.count()).toBe(count);
+      expect(console.error).toHaveBeenCalledTimes(count);
     }
     return result;
   }
@@ -235,9 +235,7 @@ module.exports = function(initModules) {
       testFn(clientCleanRender));
     it(`renders ${desc} with client render on top of good server markup`, () =>
       testFn(clientRenderOnServerString));
-    it(`renders ${
-      desc
-    } with client render on top of bad server markup`, async () => {
+    it(`renders ${desc} with client render on top of bad server markup`, async () => {
       try {
         await testFn(clientRenderOnBadMarkup);
       } catch (x) {
@@ -321,6 +319,7 @@ module.exports = function(initModules) {
     itThrowsWhenRendering,
     asyncReactDOMRender,
     serverRender,
+    clientCleanRender,
     clientRenderOnServerString,
     renderIntoDom,
     streamRender,

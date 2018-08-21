@@ -1,5 +1,9 @@
 'use strict';
 
+const chalk = require('chalk');
+const util = require('util');
+const shouldIgnoreConsoleError = require('./shouldIgnoreConsoleError');
+
 if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // Inside the class equivalence tester, we have a custom environment, let's
   // require that instead.
@@ -39,6 +43,12 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     global.spyOnDevAndProd = spyOn;
   }
 
+  expect.extend({
+    ...require('./matchers/interactionTracking'),
+    ...require('./matchers/toWarnDev'),
+    ...require('./matchers/testRenderer'),
+  });
+
   // We have a Babel transform that inserts guards against infinite loops.
   // If a loop runs for too many iterations, we throw an error and set this
   // global variable. The global lets us detect an infinite loop even if
@@ -56,16 +66,28 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   });
 
   ['error', 'warn'].forEach(methodName => {
-    const oldMethod = console[methodName];
-    const newMethod = function() {
-      newMethod.__callCount++;
-      oldMethod.apply(this, arguments);
+    const unexpectedConsoleCallStacks = [];
+    const newMethod = function(format, ...args) {
+      // Ignore uncaught errors reported by jsdom
+      // and React addendums because they're too noisy.
+      if (methodName === 'error' && shouldIgnoreConsoleError(format, args)) {
+        return;
+      }
+
+      // Capture the call stack now so we can warn about it later.
+      // The call stack has helpful information for the test author.
+      // Don't throw yet though b'c it might be accidentally caught and suppressed.
+      const stack = new Error().stack;
+      unexpectedConsoleCallStacks.push([
+        stack.substr(stack.indexOf('\n') + 1),
+        util.format(format, ...args),
+      ]);
     };
-    newMethod.__callCount = 0;
+
     console[methodName] = newMethod;
 
     env.beforeEach(() => {
-      newMethod.__callCount = 0;
+      unexpectedConsoleCallStacks.length = 0;
     });
 
     env.afterEach(() => {
@@ -74,15 +96,32 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
           `Test did not tear down console.${methodName} mock properly.`
         );
       }
-      if (console[methodName].__callCount !== 0) {
-        throw new Error(
-          `Expected test not to call console.${methodName}(). ` +
-            'If the warning is expected, mock it out using ' +
-            `spyOnDev(console, '${methodName}') or spyOnProd(console, '${
-              methodName
-            }'), ` +
-            'and test that the warning occurs.'
+
+      if (unexpectedConsoleCallStacks.length > 0) {
+        const messages = unexpectedConsoleCallStacks.map(
+          ([stack, message]) =>
+            `${chalk.red(message)}\n` +
+            `${stack
+              .split('\n')
+              .map(line => chalk.gray(line))
+              .join('\n')}`
         );
+
+        const message =
+          `Expected test not to call ${chalk.bold(
+            `console.${methodName}()`
+          )}.\n\n` +
+          'If the warning is expected, test for it explicitly by:\n' +
+          `1. Using the ${chalk.bold('.toWarnDev()')} / ${chalk.bold(
+            '.toLowPriorityWarnDev()'
+          )} matchers, or...\n` +
+          `2. Mock it out using ${chalk.bold(
+            'spyOnDev'
+          )}(console, '${methodName}') or ${chalk.bold(
+            'spyOnProd'
+          )}(console, '${methodName}'), and test that the warning occurs.`;
+
+        throw new Error(`${message}\n\n${messages.join('\n\n')}`);
       }
     });
   });

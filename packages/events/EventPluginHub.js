@@ -6,8 +6,8 @@
  * @flow
  */
 
-import ReactErrorUtils from 'shared/ReactErrorUtils';
-import invariant from 'fbjs/lib/invariant';
+import {rethrowCaughtError} from 'shared/ReactErrorUtils';
+import invariant from 'shared/invariant';
 
 import {
   injectEventPluginOrder,
@@ -25,6 +25,7 @@ import type {PluginModule} from './PluginModuleType';
 import type {ReactSyntheticEvent} from './ReactSyntheticEventType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {AnyNativeEvent} from './PluginModuleType';
+import type {TopLevelType} from './TopLevelEventTypes';
 
 /**
  * Internal queue of events that have accumulated their dispatches and are
@@ -164,13 +165,13 @@ export function getListener(inst: Fiber, registrationName: string) {
  * @return {*} An accumulation of synthetic events.
  * @internal
  */
-export function extractEvents(
-  topLevelType: string,
-  targetInst: Fiber,
+function extractEvents(
+  topLevelType: TopLevelType,
+  targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
-) {
-  let events;
+): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
+  let events = null;
   for (let i = 0; i < plugins.length; i++) {
     // Not every plugin in the ordering may be loaded at runtime.
     const possiblePlugin: PluginModule<AnyNativeEvent> = plugins[i];
@@ -189,27 +190,14 @@ export function extractEvents(
   return events;
 }
 
-/**
- * Enqueues a synthetic event that should be dispatched when
- * `processEventQueue` is invoked.
- *
- * @param {*} events An accumulation of synthetic events.
- * @internal
- */
-export function enqueueEvents(
-  events: Array<ReactSyntheticEvent> | ReactSyntheticEvent,
+export function runEventsInBatch(
+  events: Array<ReactSyntheticEvent> | ReactSyntheticEvent | null,
+  simulated: boolean,
 ) {
-  if (events) {
+  if (events !== null) {
     eventQueue = accumulateInto(eventQueue, events);
   }
-}
 
-/**
- * Dispatches all synthetic events on the event queue.
- *
- * @internal
- */
-export function processEventQueue(simulated: boolean) {
   // Set `eventQueue` to null before processing it so that we can tell if more
   // events get enqueued while processing.
   const processingEventQueue = eventQueue;
@@ -236,5 +224,20 @@ export function processEventQueue(simulated: boolean) {
       'an event queue. Support for this has not yet been implemented.',
   );
   // This would be a good time to rethrow if any of the event handlers threw.
-  ReactErrorUtils.rethrowCaughtError();
+  rethrowCaughtError();
+}
+
+export function runExtractedEventsInBatch(
+  topLevelType: TopLevelType,
+  targetInst: null | Fiber,
+  nativeEvent: AnyNativeEvent,
+  nativeEventTarget: EventTarget,
+) {
+  const events = extractEvents(
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+  );
+  runEventsInBatch(events, false);
 }

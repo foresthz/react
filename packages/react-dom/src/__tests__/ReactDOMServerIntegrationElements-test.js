@@ -134,6 +134,16 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('a non-standard element with text', async render => {
+        // This test suite generally assumes that we get exactly
+        // the same warnings (or none) for all scenarios including
+        // SSR + innerHTML, hydration, and client-side rendering.
+        // However this particular warning fires only when creating
+        // DOM nodes on the client side. We force it to fire early
+        // so that it gets deduplicated later, and doesn't fail the test.
+        expect(() => {
+          ReactDOM.render(<nonstandard />, document.createElement('div'));
+        }).toWarnDev('The tag <nonstandard> is unrecognized in this browser.');
+
         const e = await render(<nonstandard>Text</nonstandard>);
         expect(e.tagName).toBe('NONSTANDARD');
         expect(e.childNodes.length).toBe(1);
@@ -475,15 +485,96 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.tagName).toBe('BUTTON');
     });
 
-    itRenders('a div with dangerouslySetInnerHTML', async render => {
-      const e = await render(
-        <div dangerouslySetInnerHTML={{__html: "<span id='child'/>"}} />,
-      );
+    itRenders('a div with dangerouslySetInnerHTML number', async render => {
+      // Put dangerouslySetInnerHTML one level deeper because otherwise
+      // hydrating from a bad markup would cause a mismatch (since we don't
+      // patch dangerouslySetInnerHTML as text content).
+      const e = (await render(
+        <div>
+          <span dangerouslySetInnerHTML={{__html: 0}} />
+        </div>,
+      )).firstChild;
+      expect(e.childNodes.length).toBe(1);
+      expect(e.firstChild.nodeType).toBe(TEXT_NODE_TYPE);
+      expect(e.textContent).toBe('0');
+    });
+
+    itRenders('a div with dangerouslySetInnerHTML boolean', async render => {
+      // Put dangerouslySetInnerHTML one level deeper because otherwise
+      // hydrating from a bad markup would cause a mismatch (since we don't
+      // patch dangerouslySetInnerHTML as text content).
+      const e = (await render(
+        <div>
+          <span dangerouslySetInnerHTML={{__html: false}} />
+        </div>,
+      )).firstChild;
+      expect(e.childNodes.length).toBe(1);
+      expect(e.firstChild.nodeType).toBe(TEXT_NODE_TYPE);
+      expect(e.firstChild.data).toBe('false');
+    });
+
+    itRenders(
+      'a div with dangerouslySetInnerHTML text string',
+      async render => {
+        // Put dangerouslySetInnerHTML one level deeper because otherwise
+        // hydrating from a bad markup would cause a mismatch (since we don't
+        // patch dangerouslySetInnerHTML as text content).
+        const e = (await render(
+          <div>
+            <span dangerouslySetInnerHTML={{__html: 'hello'}} />
+          </div>,
+        )).firstChild;
+        expect(e.childNodes.length).toBe(1);
+        expect(e.firstChild.nodeType).toBe(TEXT_NODE_TYPE);
+        expect(e.textContent).toBe('hello');
+      },
+    );
+
+    itRenders(
+      'a div with dangerouslySetInnerHTML element string',
+      async render => {
+        const e = await render(
+          <div dangerouslySetInnerHTML={{__html: "<span id='child'/>"}} />,
+        );
+        expect(e.childNodes.length).toBe(1);
+        expect(e.firstChild.tagName).toBe('SPAN');
+        expect(e.firstChild.getAttribute('id')).toBe('child');
+        expect(e.firstChild.childNodes.length).toBe(0);
+      },
+    );
+
+    itRenders('a div with dangerouslySetInnerHTML object', async render => {
+      const obj = {
+        toString() {
+          return "<span id='child'/>";
+        },
+      };
+      const e = await render(<div dangerouslySetInnerHTML={{__html: obj}} />);
       expect(e.childNodes.length).toBe(1);
       expect(e.firstChild.tagName).toBe('SPAN');
       expect(e.firstChild.getAttribute('id')).toBe('child');
       expect(e.firstChild.childNodes.length).toBe(0);
     });
+
+    itRenders(
+      'a div with dangerouslySetInnerHTML set to null',
+      async render => {
+        const e = await render(
+          <div dangerouslySetInnerHTML={{__html: null}} />,
+        );
+        expect(e.childNodes.length).toBe(0);
+      },
+    );
+
+    itRenders(
+      'a div with dangerouslySetInnerHTML set to undefined',
+      async render => {
+        const e = await render(
+          <div dangerouslySetInnerHTML={{__html: undefined}} />,
+        );
+        expect(e.childNodes.length).toBe(0);
+      },
+    );
 
     describe('newline-eating elements', function() {
       itRenders(
@@ -858,6 +949,75 @@ describe('ReactDOMServerIntegration', () => {
           (__DEV__
             ? ' If you meant to render a collection of children, use ' +
               'an array instead.'
+            : ''),
+      );
+    });
+
+    describe('badly-typed elements', function() {
+      itThrowsWhenRendering(
+        'object',
+        async render => {
+          let EmptyComponent = {};
+          expect(() => {
+            EmptyComponent = <EmptyComponent />;
+          }).toWarnDev(
+            'Warning: React.createElement: type is invalid -- expected a string ' +
+              '(for built-in components) or a class/function (for composite ' +
+              'components) but got: object. You likely forgot to export your ' +
+              "component from the file it's defined in, or you might have mixed up " +
+              'default and named imports.',
+            {withoutStack: true},
+          );
+          await render(EmptyComponent);
+        },
+        'Element type is invalid: expected a string (for built-in components) or a class/function ' +
+          '(for composite components) but got: object.' +
+          (__DEV__
+            ? " You likely forgot to export your component from the file it's defined in, " +
+              'or you might have mixed up default and named imports.'
+            : ''),
+      );
+
+      itThrowsWhenRendering(
+        'null',
+        async render => {
+          let NullComponent = null;
+          expect(() => {
+            NullComponent = <NullComponent />;
+          }).toWarnDev(
+            'Warning: React.createElement: type is invalid -- expected a string ' +
+              '(for built-in components) or a class/function (for composite ' +
+              'components) but got: null.',
+            {withoutStack: true},
+          );
+          await render(NullComponent);
+        },
+        'Element type is invalid: expected a string (for built-in components) or a class/function ' +
+          '(for composite components) but got: null',
+      );
+
+      itThrowsWhenRendering(
+        'undefined',
+        async render => {
+          let UndefinedComponent = undefined;
+          expect(() => {
+            UndefinedComponent = <UndefinedComponent />;
+          }).toWarnDev(
+            'Warning: React.createElement: type is invalid -- expected a string ' +
+              '(for built-in components) or a class/function (for composite ' +
+              'components) but got: undefined. You likely forgot to export your ' +
+              "component from the file it's defined in, or you might have mixed up " +
+              'default and named imports.',
+            {withoutStack: true},
+          );
+
+          await render(UndefinedComponent);
+        },
+        'Element type is invalid: expected a string (for built-in components) or a class/function ' +
+          '(for composite components) but got: undefined.' +
+          (__DEV__
+            ? " You likely forgot to export your component from the file it's defined in, " +
+              'or you might have mixed up default and named imports.'
             : ''),
       );
     });

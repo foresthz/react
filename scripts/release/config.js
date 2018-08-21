@@ -1,6 +1,6 @@
 'use strict';
 
-const dependencies = ['fbjs', 'object-assign', 'prop-types'];
+const dependencies = ['object-assign', 'prop-types'];
 
 const paramDefinitions = [
   {
@@ -22,6 +22,26 @@ const paramDefinitions = [
     type: String,
     alias: 'v',
     description: 'Semantic version number',
+  },
+  {
+    name: 'branch',
+    type: String,
+    alias: 'b',
+    description: 'Branch to build from; defaults to [bold]{master}',
+    defaultValue: 'master',
+  },
+  {
+    name: 'local',
+    type: Boolean,
+    description:
+      "Don't push or pull changes from remote repo. Don't check CI status.",
+  },
+  {
+    name: 'tag',
+    type: String,
+    description:
+      'The npm dist tag; defaults to [bold]{latest} for a stable' +
+      'release, [bold]{next} for unstable',
   },
 ];
 

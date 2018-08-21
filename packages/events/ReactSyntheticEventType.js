@@ -9,14 +9,16 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {TopLevelType} from './TopLevelEventTypes';
 
 export type DispatchConfig = {
-  dependencies: Array<string>,
+  dependencies: Array<TopLevelType>,
   phasedRegistrationNames?: {
     bubbled: string,
     captured: string,
   },
   registrationName?: string,
+  isInteractive?: boolean,
 };
 
 export type ReactSyntheticEvent = {

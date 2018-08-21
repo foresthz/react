@@ -9,8 +9,7 @@
 
 // Mock of the Native Hooks
 
-const ReactNativeTagHandles = require('../ReactNativeTagHandles').default;
-const invariant = require('fbjs/lib/invariant');
+import invariant from 'shared/invariant';
 
 // Map of viewTag -> {children: [childTag], parent: ?parentTag}
 const roots = [];
@@ -18,7 +17,7 @@ let views = new Map();
 
 function autoCreateRoot(tag) {
   // Seriously, this is how we distinguish roots in RN.
-  if (!views.has(tag) && ReactNativeTagHandles.reactTagIsNativeTopRootID(tag)) {
+  if (!views.has(tag) && tag % 10 === 1) {
     roots.push(tag);
     views.set(tag, {
       children: [],
@@ -66,6 +65,7 @@ const RCTUIManager = {
       let out = '';
       out +=
         ' '.repeat(indent) + info.viewName + ' ' + JSON.stringify(info.props);
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
       for (const child of info.children) {
         out += '\n' + dumpSubtree(child, indent + 2);
       }
@@ -143,6 +143,7 @@ const RCTUIManager = {
       indicesToInsert.push([addAtIndices[i], addChildReactTags[i]]);
     });
     indicesToInsert.sort((a, b) => a[0] - b[0]);
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const [i, tag] of indicesToInsert) {
       insertSubviewAtIndex(parentTag, tag, i);
     }

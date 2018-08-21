@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {CapturedError} from '../ReactFiberScheduler';
+import type {CapturedError} from '../ReactCapturedValue';
 
 // Module provided by RN:
 import ExceptionsManager from 'ExceptionsManager';
@@ -30,9 +30,7 @@ export function showErrorDialog(capturedError: CapturedError): boolean {
     errorToHandle = error;
 
     try {
-      errorToHandle.message = `${summary}\n\nThis error is located at:${
-        componentStack
-      }`;
+      errorToHandle.message = `${summary}\n\nThis error is located at:${componentStack}`;
     } catch (e) {}
   } else if (typeof error === 'string') {
     errorToHandle = new Error(

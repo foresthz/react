@@ -5,16 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
- * @providesModule ReactTypes
  */
 
 export type ReactNode =
   | React$Element<any>
-  | ReactCall<any>
-  | ReactReturn<any>
   | ReactPortal
   | ReactText
-  | ReactFragment;
+  | ReactFragment
+  | ReactProvider<any>
+  | ReactConsumer<any>;
 
 export type ReactFragment = ReactEmpty | Iterable<React$Node>;
 
@@ -24,27 +23,47 @@ export type ReactText = string | number;
 
 export type ReactEmpty = null | void | boolean;
 
-export type ReactCall<V> = {
+export type ReactProvider<T> = {
   $$typeof: Symbol | number,
-  type: Symbol | number,
+  type: ReactProviderType<T>,
   key: null | string,
   ref: null,
   props: {
-    props: any,
-    // This should be a more specific CallHandler
-    handler: (props: any, returns: Array<V>) => ReactNodeList,
+    value: T,
     children?: ReactNodeList,
   },
 };
 
-export type ReactReturn<V> = {
+export type ReactProviderType<T> = {
   $$typeof: Symbol | number,
-  type: Symbol | number,
-  key: null,
+  _context: ReactContext<T>,
+};
+
+export type ReactConsumer<T> = {
+  $$typeof: Symbol | number,
+  type: ReactContext<T>,
+  key: null | string,
   ref: null,
   props: {
-    value: V,
+    children: (value: T) => ReactNodeList,
+    unstable_observedBits?: number,
   },
+};
+
+export type ReactContext<T> = {
+  $$typeof: Symbol | number,
+  Consumer: ReactContext<T>,
+  Provider: ReactProviderType<T>,
+  unstable_read: () => T,
+
+  _calculateChangedBits: ((a: T, b: T) => number) | null,
+
+  _currentValue: T,
+  _currentValue2: T,
+
+  // DEV only
+  _currentRenderer?: Object | null,
+  _currentRenderer2?: Object | null,
 };
 
 export type ReactPortal = {
@@ -55,3 +74,7 @@ export type ReactPortal = {
   // TODO: figure out the API for cross-renderer implementation.
   implementation: any,
 };
+
+export type RefObject = {|
+  current: any,
+|};

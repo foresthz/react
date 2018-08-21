@@ -3,15 +3,26 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
-import {batchedUpdates} from 'events/ReactGenericBatching';
+import type {AnyNativeEvent} from 'events/PluginModuleType';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
+
+import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
+import {runExtractedEventsInBatch} from 'events/EventPluginHub';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactTypeOfWork';
 
 import {addEventBubbleListener, addEventCaptureListener} from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
+import SimpleEventPlugin from './SimpleEventPlugin';
+import {getRawEventName} from './DOMTopLevelEventTypes';
+
+const {isInteractiveTopLevelEventType} = SimpleEventPlugin;
 
 const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 const callbackBookkeepingPool = [];
@@ -36,7 +47,16 @@ function findRootContainerNode(inst) {
 }
 
 // Used to store ancestor hierarchy in top level callback
-function getTopLevelCallbackBookKeeping(topLevelType, nativeEvent, targetInst) {
+function getTopLevelCallbackBookKeeping(
+  topLevelType,
+  nativeEvent,
+  targetInst,
+): {
+  topLevelType: ?DOMTopLevelEventType,
+  nativeEvent: ?AnyNativeEvent,
+  targetInst: Fiber | null,
+  ancestors: Array<Fiber>,
+} {
   if (callbackBookkeepingPool.length) {
     const instance = callbackBookkeepingPool.pop();
     instance.topLevelType = topLevelType;
@@ -62,7 +82,7 @@ function releaseTopLevelCallbackBookKeeping(instance) {
   }
 }
 
-function handleTopLevelImpl(bookKeeping) {
+function handleTopLevel(bookKeeping) {
   let targetInst = bookKeeping.targetInst;
 
   // Loop through the hierarchy, in case there's any nested components.
@@ -85,7 +105,7 @@ function handleTopLevelImpl(bookKeeping) {
 
   for (let i = 0; i < bookKeeping.ancestors.length; i++) {
     targetInst = bookKeeping.ancestors[i];
-    _handleTopLevel(
+    runExtractedEventsInBatch(
       bookKeeping.topLevelType,
       targetInst,
       bookKeeping.nativeEvent,
@@ -96,13 +116,8 @@ function handleTopLevelImpl(bookKeeping) {
 
 // TODO: can we stop exporting these?
 export let _enabled = true;
-export let _handleTopLevel: null;
 
-export function setHandleTopLevel(handleTopLevel) {
-  _handleTopLevel = handleTopLevel;
-}
-
-export function setEnabled(enabled) {
+export function setEnabled(enabled: ?boolean) {
   _enabled = !!enabled;
 }
 
@@ -113,46 +128,67 @@ export function isEnabled() {
 /**
  * Traps top-level events by using event bubbling.
  *
- * @param {string} topLevelType Record from `BrowserEventConstants`.
- * @param {string} handlerBaseName Event name (e.g. "click").
+ * @param {number} topLevelType Number from `TopLevelEventTypes`.
  * @param {object} element Element on which to attach listener.
  * @return {?object} An object with a remove function which will forcefully
  *                  remove the listener.
  * @internal
  */
-export function trapBubbledEvent(topLevelType, handlerBaseName, element) {
+export function trapBubbledEvent(
+  topLevelType: DOMTopLevelEventType,
+  element: Document | Element,
+) {
   if (!element) {
     return null;
   }
+  const dispatch = isInteractiveTopLevelEventType(topLevelType)
+    ? dispatchInteractiveEvent
+    : dispatchEvent;
+
   addEventBubbleListener(
     element,
-    handlerBaseName,
-    dispatchEvent.bind(null, topLevelType),
+    getRawEventName(topLevelType),
+    // Check if interactive and wrap in interactiveUpdates
+    dispatch.bind(null, topLevelType),
   );
 }
 
 /**
  * Traps a top-level event by using event capturing.
  *
- * @param {string} topLevelType Record from `BrowserEventConstants`.
- * @param {string} handlerBaseName Event name (e.g. "click").
+ * @param {number} topLevelType Number from `TopLevelEventTypes`.
  * @param {object} element Element on which to attach listener.
  * @return {?object} An object with a remove function which will forcefully
  *                  remove the listener.
  * @internal
  */
-export function trapCapturedEvent(topLevelType, handlerBaseName, element) {
+export function trapCapturedEvent(
+  topLevelType: DOMTopLevelEventType,
+  element: Document | Element,
+) {
   if (!element) {
     return null;
   }
+  const dispatch = isInteractiveTopLevelEventType(topLevelType)
+    ? dispatchInteractiveEvent
+    : dispatchEvent;
+
   addEventCaptureListener(
     element,
-    handlerBaseName,
-    dispatchEvent.bind(null, topLevelType),
+    getRawEventName(topLevelType),
+    // Check if interactive and wrap in interactiveUpdates
+    dispatch.bind(null, topLevelType),
   );
 }
 
-export function dispatchEvent(topLevelType, nativeEvent) {
+function dispatchInteractiveEvent(topLevelType, nativeEvent) {
+  interactiveUpdates(dispatchEvent, topLevelType, nativeEvent);
+}
+
+export function dispatchEvent(
+  topLevelType: DOMTopLevelEventType,
+  nativeEvent: AnyNativeEvent,
+) {
   if (!_enabled) {
     return;
   }
@@ -180,7 +216,7 @@ export function dispatchEvent(topLevelType, nativeEvent) {
   try {
     // Event queue being processed in the same cycle allows
     // `preventDefault`.
-    batchedUpdates(handleTopLevelImpl, bookKeeping);
+    batchedUpdates(handleTopLevel, bookKeeping);
   } finally {
     releaseTopLevelCallbackBookKeeping(bookKeeping);
   }
